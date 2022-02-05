@@ -1,7 +1,7 @@
 """Base classes for controlling an e-ink display."""
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 from PIL import Image
 
@@ -9,7 +9,7 @@ from PIL import Image
 class DisplayChannel:
     """
     A channel on the display.
-    
+
     Each channel represents an individual colour, other than white.
     """
 
@@ -29,8 +29,8 @@ class DisplayChannel:
 class Display(metaclass=ABCMeta):
     """An initialised e-ink display that we can control."""
 
-    @abstractmethod
     @property
+    @abstractmethod
     def resolution(self) -> Tuple[int, int]:
         """
         The resolution of the display.
@@ -39,8 +39,8 @@ class Display(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: nocover
 
-    @abstractmethod
     @property
+    @abstractmethod
     def channels(self) -> List[DisplayChannel]:
         """
         The channels available on this display.
@@ -50,12 +50,17 @@ class Display(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: nocover
 
     @abstractmethod
-    def show(self, buffer: Image, *, channel: Optional[DisplayChannel] = None) -> None:
+    def show(
+        self,
+        buffer: Image.Image,
+        *,
+        channel: Optional[DisplayChannel] = None,
+    ) -> None:
         """
         Set the image.
 
         :param buffer: The image to display on the channel.
-        :param channel: The channel to set the data for, if the display has multiple channels.
+        :param channel: The channel to set the data for, default to first.
         """
         raise NotImplementedError  # pragma: nocover
 
@@ -79,6 +84,6 @@ class Display(metaclass=ABCMeta):
         img = Image.new("1", self.resolution)
         for channel in self.channels:
             self.show(img, channel=channel)
-        
+
         if refresh:
             self.refresh()
