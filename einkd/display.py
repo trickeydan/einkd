@@ -75,6 +75,26 @@ class Display(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: nocover
 
+    @property
+    def width(self) -> int:
+        """
+        Get the width of the display.
+
+        :returns: The width of the display, in pixels.
+        """
+        width, _ = self.resolution
+        return width
+
+    @property
+    def height(self) -> int:
+        """
+        Get the height of the display.
+
+        :returns: The height of the display, in pixels.
+        """
+        _, height = self.resolution
+        return height
+
     def clear(self, *, refresh: bool = True) -> None:
         """
         Clear the display.
