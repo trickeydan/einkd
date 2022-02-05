@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "astoria"
+version = "0.1.0"
+description = "Robot Management System for Student Robotics Kit"
+authors = ["Dan Trickey <srobo-astoria@trickey.io>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/srobo/astoria"
+homepage = "https://github.com/srobo/astoria"
+documentation = "https://srobo.github.io/astoria"
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+Pillow = "^8.1.0"
+pydantic = "^1.7.3"
+requests = "^2.25.1"
+cached-property = "^1.5.2"
+"RPi.GPIO" = {version = "^0.7.0", optional = true}
+
+[tool.poetry.dev-dependencies]
+flake8 = "*"
+flake8-commas = "*"
+flake8-comprehensions = "*"
+flake8-debugger = "*"
+flake8-docstrings = "*"
+flake8-isort = "*"
+flake8-mutable = "*"
+flake8-todo = "*"
+mypy = "*"
+pytest = "*"
+pytest-cov = "*"
+rope = "*"
+isort = {version = "*",extras = ["pyproject"]}
+dephell = "^0.8.3"
+
+[tool.poetry.extras]
+rpi = ["RPi.GPIO"]
+server = ["fastapi", "uvicorn"]
