@@ -23,5 +23,5 @@ class Component(metaclass=ABCMeta):
         return self._cell_y
 
     @abstractmethod
-    def draw(self, cell_width: int, cell_height: int) -> Image:
+    def draw(self, cell_width: int, cell_height: int) -> Image.Image:
         raise NotImplementedError

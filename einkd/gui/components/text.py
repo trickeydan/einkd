@@ -18,7 +18,7 @@ class TextComponent(Component):
         self._text = text
         self._background_colour = background_colour
 
-    def draw(self, cell_width: int, cell_height: int) -> Image:
+    def draw(self, cell_width: int, cell_height: int) -> Image.Image:
         image = Image.new(
             "RGB",
             (cell_width * self.cell_x, cell_height * self.cell_y),

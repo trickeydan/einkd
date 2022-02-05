@@ -50,7 +50,7 @@ class Window:
                     cells[x][y] = (x_base, y_base)
                         
 
-    def draw(self) -> Image:
+    def draw(self) -> Image.Image:
         self.validate_components()
         image = Image.new("RGB", (self.width, self.height), (255, 255, 255))
         x_offset = (self.width % self.cell_width) // 2

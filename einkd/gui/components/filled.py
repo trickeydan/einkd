@@ -16,7 +16,7 @@ class FilledComponent(Component):
         super().__init__(name, cell_x, cell_y)
         self._colour = colour
 
-    def draw(self, cell_width: int, cell_height: int) -> Image:
+    def draw(self, cell_width: int, cell_height: int) -> Image.Image:
         return Image.new(
             "RGB",
             (cell_width * self.cell_x, cell_height * self.cell_y),

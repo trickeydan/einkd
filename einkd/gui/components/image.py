@@ -20,7 +20,7 @@ class ImageComponent(Component):
         self.file_path = file_path
         self._centre = centre
 
-    def draw(self, cell_width: int, cell_height: int) -> Image:
+    def draw(self, cell_width: int, cell_height: int) -> Image.Image:
         image = Image.open(self.file_path)
         dimensions = (cell_width * self.cell_x, cell_height * self.cell_y)
         canvas =  Image.new(
