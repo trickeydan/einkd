@@ -8,6 +8,7 @@ from PIL import Image
 
 LOGGER = logging.getLogger(__name__)
 
+
 class DisplayChannel:
     """
     A channel on the display.

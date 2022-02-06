@@ -37,14 +37,12 @@ class EPD2in13bcDisplay(Display):
     def __init__(
         self,
         spi: spidev.SpiDev,
-        gpio: RPi.GPIO,
         reset_pin: int,
         dc_pin: int,
         cs_pin: int,
         busy_pin: int,
     ) -> None:
         self._spi = spi
-        self._gpio = gpio
         self._reset_pin = reset_pin
         self._dc_pin = dc_pin
         self._cs_pin = cs_pin
@@ -105,10 +103,10 @@ class EPD2in13bcDisplay(Display):
         :param command: The command to send.
         """
         LOGGER.debug(f"Sending command: {command}")
-        self._gpio.output(self._dc_pin, 0)  # Set to command mode.
-        self._gpio.output(self._cs_pin, 0)  # Select the e-ink screen.
+        RPi.GPIO.output(self._dc_pin, 0)  # Set to command mode.
+        RPi.GPIO.output(self._cs_pin, 0)  # Select the e-ink screen.
         self._spi.writebytes([command])  # Send the command.
-        self._gpio.output(self._cs_pin, 1)  # De-select the e-ink screen.
+        RPi.GPIO.output(self._cs_pin, 1)  # De-select the e-ink screen.
 
     def _send_data(self, data: int) -> None:
         """
@@ -117,10 +115,10 @@ class EPD2in13bcDisplay(Display):
         :param data: The data to send.
         """
         LOGGER.debug(f"Sending data {data}")
-        self._gpio.output(self._dc_pin, 1)  # Set to data mode.
-        self._gpio.output(self._cs_pin, 0)  # Select the e-ink screen.
+        RPi.GPIO.output(self._dc_pin, 1)  # Set to data mode.
+        RPi.GPIO.output(self._cs_pin, 0)  # Select the e-ink screen.
         self._spi.writebytes([data])  # Send the data.
-        self._gpio.output(self._cs_pin, 1)  # De-select the e-ink screen.
+        RPi.GPIO.output(self._cs_pin, 1)  # De-select the e-ink screen.
 
     def _wait_busy(self) -> None:
         """
@@ -130,7 +128,7 @@ class EPD2in13bcDisplay(Display):
         simply waits for the pin to go low.
         """
         LOGGER.debug("Waiting for display.")
-        while self._gpio.input(self._busy_pin) == 0:
+        while RPi.GPIO.input(self._busy_pin) == 0:
             self._delay_ms(100)
         LOGGER.debug("Finished waiting for display")
 
@@ -150,11 +148,11 @@ class EPD2in13bcDisplay(Display):
         Performs a hardware reset of the display.
         """
         LOGGER.debug("Display hardware reset")
-        self._gpio.output(self._reset_pin, 1)
+        RPi.GPIO.output(self._reset_pin, 1)
         self._delay_ms(200)
-        self._gpio.output(self._reset_pin, 0)
+        RPi.GPIO.output(self._reset_pin, 0)
         self._delay_ms(5)
-        self._gpio.output(self._reset_pin, 1)
+        RPi.GPIO.output(self._reset_pin, 1)
         self._delay_ms(200)
 
     def sleep(self) -> None:
@@ -227,7 +225,6 @@ class EPD2in13bcDriver(BaseDriver):
         self._spi_max_speed = spi_max_speed
 
         self._spi = spidev.SpiDev()
-        self._gpio = RPi.GPIO
 
     def setup(self) -> None:
         """
@@ -238,12 +235,12 @@ class EPD2in13bcDriver(BaseDriver):
         This should fail if the display has already been setup.
         """
         LOGGER.debug("Display setup")
-        self._gpio.setmode(self._gpio.BCM)
-        self._gpio.setwarnings(False)
-        self._gpio.setup(self._reset_pin, self._gpio.OUT)
-        self._gpio.setup(self._dc_pin, self._gpio.OUT)
-        self._gpio.setup(self._cs_pin, self._gpio.OUT)
-        self._gpio.setup(self._busy_pin, self._gpio.IN)
+        RPi.GPIO.setmode(RPi.GPIO.BCM)
+        RPi.GPIO.setwarnings(False)
+        RPi.GPIO.setup(self._reset_pin, RPi.GPIO.OUT)
+        RPi.GPIO.setup(self._dc_pin, RPi.GPIO.OUT)
+        RPi.GPIO.setup(self._cs_pin, RPi.GPIO.OUT)
+        RPi.GPIO.setup(self._busy_pin, RPi.GPIO.IN)
 
         LOGGER.debug("Opening SPI")
         self._spi.open(self._spi_bus, self._spi_dev)
@@ -251,7 +248,6 @@ class EPD2in13bcDriver(BaseDriver):
         self._spi.mode = 0b00
         self._display = EPD2in13bcDisplay(
             self._spi,
-            self._gpio,
             self._reset_pin,
             self._dc_pin,
             self._cs_pin,
@@ -267,10 +263,10 @@ class EPD2in13bcDriver(BaseDriver):
         LOGGER.debug("Cleaning up display.")
         self._spi.close()
 
-        self._gpio.output(self._reset_pin, 0)
-        self._gpio.output(self._dc_pin, 0)
+        RPi.GPIO.output(self._reset_pin, 0)
+        RPi.GPIO.output(self._dc_pin, 0)
 
-        self._gpio.cleanup([
+        RPi.GPIO.cleanup([
             self._reset_pin,
             self._dc_pin,
             self._cs_pin,
