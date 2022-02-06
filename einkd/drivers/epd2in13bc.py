@@ -1,4 +1,5 @@
 """Driver for Waveshare 2in13bc display."""
+import logging
 import time
 from typing import Optional
 
@@ -20,6 +21,8 @@ CMD_RESOLUTION_SETTING = 0x61
 
 DATA_BOOSTER_SOFT_START = 0x17  # Always 0x17 from datasheet
 DATA_DEEP_SLEEP_CHECK_CODE = 0xA5  # From datasheet
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EPD2in13bcDisplay(Display):
@@ -52,6 +55,7 @@ class EPD2in13bcDisplay(Display):
 
     def _init(self) -> None:
         """Initialise the display."""
+        LOGGER.debug("Initialising")
         # Perform a booster soft start.
         self._send_command(CMD_BOOSTER_SOFT_START)
         self._send_data(DATA_BOOSTER_SOFT_START)
@@ -100,6 +104,7 @@ class EPD2in13bcDisplay(Display):
 
         :param command: The command to send.
         """
+        LOGGER.debug(f"Sending command: {command}")
         self._gpio.output(self._dc_pin, 0)  # Set to command mode.
         self._gpio.output(self._cs_pin, 0)  # Select the e-ink screen.
         self._spi.writebytes([command])  # Send the command.
@@ -111,6 +116,7 @@ class EPD2in13bcDisplay(Display):
 
         :param data: The data to send.
         """
+        LOGGER.debug(f"Sending data {data}")
         self._gpio.output(self._dc_pin, 1)  # Set to data mode.
         self._gpio.output(self._cs_pin, 0)  # Select the e-ink screen.
         self._spi.writebytes([data])  # Send the data.
@@ -123,8 +129,10 @@ class EPD2in13bcDisplay(Display):
         The busy pin is high whilst the display is busy, so this function
         simply waits for the pin to go low.
         """
+        LOGGER.debug("Waiting for display.")
         while self._gpio.input(self._busy_pin) == 0:
             self._delay_ms(100)
+        LOGGER.debug("Display is done.")
 
     def _delay_ms(self, amount_ms: int) -> None:
         """
@@ -132,6 +140,7 @@ class EPD2in13bcDisplay(Display):
 
         :param amount_ms: Number of milliseconds to delay for.
         """
+        LOGGER.debug(f"Waiting {amount_ms}ms")
         time.sleep(amount_ms / 1000.0)
 
     def reset(self) -> None:
@@ -140,6 +149,7 @@ class EPD2in13bcDisplay(Display):
 
         Performs a hardware reset of the display.
         """
+        LOGGER.debug("Display hardware reset")
         self._gpio.output(self._reset_pin, 1)
         self._delay_ms(200)
         self._gpio.output(self._reset_pin, 0)
@@ -154,6 +164,7 @@ class EPD2in13bcDisplay(Display):
         After this function has been called, the display will become unresponsive
         until it has been reset.
         """
+        LOGGER.debug("Setting display to sleep")
         # After the Power OFF command, the driver will be powered OFF. Refer to the
         # POWER MANAGEMENT section for the sequence. This command will turn off booster,
         # controller, source driver, gate driver, VCOM, and temperature sensor, but
@@ -226,6 +237,7 @@ class EPD2in13bcDriver(BaseDriver):
 
         This should fail if the display has already been setup.
         """
+        LOGGER.debug("Display setup")
         self._gpio.setmode(self._gpio.BCM)
         self._gpio.setwarnings(False)
         self._gpio.setup(self._reset_pin, self._gpio.OUT)
@@ -233,6 +245,7 @@ class EPD2in13bcDriver(BaseDriver):
         self._gpio.setup(self._cs_pin, self._gpio.OUT)
         self._gpio.setup(self._busy_pin, self._gpio.IN)
 
+        LOGGER.debug("Opening SPI")
         self._spi.open(self._spi_bus, self._spi_dev)
         self._spi.max_speed_hz = self._spi_max_speed
         self._spi.mode = 0b00
@@ -251,6 +264,7 @@ class EPD2in13bcDriver(BaseDriver):
 
         After this method has been run, _display should be None.
         """
+        LOGGER.debug("Cleaning up display.")
         self._spi.close()
 
         self._gpio.output(self._reset_pin, 0)
