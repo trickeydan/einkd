@@ -1,10 +1,12 @@
 """Base classes for controlling an e-ink display."""
 
+import logging
 from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Tuple
 
 from PIL import Image
 
+LOGGER = logging.getLogger(__name__)
 
 class DisplayChannel:
     """
@@ -101,6 +103,7 @@ class Display(metaclass=ABCMeta):
 
         :param refresh: Refresh the display.
         """
+        LOGGER.debug("Clearing display")
         img = Image.new("1", self.resolution)
         for channel in self.channels:
             self.show(img, channel=channel)

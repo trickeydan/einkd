@@ -132,7 +132,7 @@ class EPD2in13bcDisplay(Display):
         LOGGER.debug("Waiting for display.")
         while self._gpio.input(self._busy_pin) == 0:
             self._delay_ms(100)
-        LOGGER.debug("Display is done.")
+        LOGGER.debug("Finished waiting for display")
 
     def _delay_ms(self, amount_ms: int) -> None:
         """
