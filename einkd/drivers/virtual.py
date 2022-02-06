@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from PIL import Image
 from PIL.ImageTk import PhotoImage
 
-from einkd.display import Display, DisplayChannel
+from einkd.display import Display
 
 from .base import BaseDriver
 
@@ -15,9 +15,7 @@ class TkinterDisplay(Display):
 
     colour_mode = "RGB"
 
-    channels = [
-        DisplayChannel("black"),
-    ]
+    channels = ["black"]
 
     def __init__(self, resolution: Tuple[int, int]) -> None:
         self._resolution = resolution
@@ -44,7 +42,7 @@ class TkinterDisplay(Display):
         self,
         buffer: Image.Image,
         *,
-        channel: Optional[DisplayChannel] = None,
+        channel: Optional[str] = None,
     ) -> None:
         """
         Set the image.

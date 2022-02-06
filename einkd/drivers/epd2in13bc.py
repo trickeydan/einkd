@@ -7,7 +7,7 @@ import RPi.GPIO
 import spidev
 from PIL import Image
 
-from einkd.display import Display, DisplayChannel
+from einkd.display import Display
 
 from .base import BaseDriver
 
@@ -29,10 +29,7 @@ class EPD2in13bcDisplay(Display):
     """An initialised e-ink display that we can control."""
 
     resolution = (212, 104)
-    channels = [
-        DisplayChannel("black"),
-        DisplayChannel("red"),
-    ]
+    channels = ["black", "red"]
 
     def __init__(
         self,
@@ -50,6 +47,11 @@ class EPD2in13bcDisplay(Display):
 
         self.reset()
         self._init()
+
+        self._buffers = {
+            channel: [0xFF] * self.buffer_length
+            for channel in self.channels
+        }
 
     def _init(self) -> None:
         """Initialise the display."""
@@ -141,6 +143,15 @@ class EPD2in13bcDisplay(Display):
         LOGGER.debug(f"Waiting {amount_ms}ms")
         time.sleep(amount_ms / 1000.0)
 
+    @property
+    def buffer_length(self) -> int:
+        """
+        The length of the buffer for a single channel.
+
+        :returns: The length of the buffer in bytes.
+        """
+        return self.width // 8 * self.height
+
     def reset(self) -> None:
         """
         Reset the display.
@@ -181,7 +192,7 @@ class EPD2in13bcDisplay(Display):
         self,
         buffer: Image.Image,
         *,
-        channel: Optional[DisplayChannel] = None,
+        channel: Optional[str] = None,
     ) -> None:
         """
         Set the image.

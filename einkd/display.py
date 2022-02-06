@@ -9,26 +9,6 @@ from PIL import Image
 LOGGER = logging.getLogger(__name__)
 
 
-class DisplayChannel:
-    """
-    A channel on the display.
-
-    Each channel represents an individual colour, other than white.
-    """
-
-    def __init__(self, name: str) -> None:
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """
-        The name of the display.
-
-        :returns: The name of the display.
-        """
-        return self._name
-
-
 class Display(metaclass=ABCMeta):
     """An initialised e-ink display that we can control."""
 
@@ -44,7 +24,7 @@ class Display(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def channels(self) -> List[DisplayChannel]:
+    def channels(self) -> List[str]:
         """
         The channels available on this display.
 
@@ -57,7 +37,7 @@ class Display(metaclass=ABCMeta):
         self,
         buffer: Image.Image,
         *,
-        channel: Optional[DisplayChannel] = None,
+        channel: Optional[str] = None,
     ) -> None:
         """
         Set the image.
