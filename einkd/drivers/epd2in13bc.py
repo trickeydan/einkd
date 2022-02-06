@@ -226,7 +226,7 @@ class EPD2in13bcDriver(BaseDriver):
         self._spi_dev = spi_dev
         self._spi_max_speed = spi_max_speed
 
-        self._spi = spidev.spidev.SpiDev()
+        self._spi = spidev.SpiDev()
         self._gpio = RPi.GPIO
 
     def setup(self) -> None:
