@@ -19,20 +19,33 @@ class Window:
 
     @property
     def cell_width(self) -> int:
+        """
+        The width of a single cell.
+
+        :returns: The width of a cell in pixels.
+        """
         return self.width // self.grid_width
 
     @property
     def cell_height(self) -> int:
+        """
+        The height of a single cell.
+
+        :returns: The height of a cell in pixels.
+        """
         return self.height // self.grid_height
 
     def validate_components(self) -> None:
-        
+        """Validate the components in the window."""
         # Check component names are unique
         if len({c.name for c in self.components.values()}) != len(self.components):
             raise ValueError("Component names must be unique")
 
-        cells: List[List[Optional[Tuple[int, int]]]] = [[None for _ in range(self.grid_height)] for _ in range(self.grid_width)]
-        
+        cells: List[List[Optional[Tuple[int, int]]]] = [
+            [None for _ in range(self.grid_height)]
+            for _ in range(self.grid_width)
+        ]
+
         # Check for overlaps
         for (x_base, y_base), component in self.components.items():
             for x_offset in range(component.cell_x):
@@ -44,13 +57,20 @@ class Window:
                     if val is not None:
                         overlapping_component = self.components[val]
                         raise ValueError(
-                            f"Component {component.name} overlaps {overlapping_component.name}",
+                            f"Component {component.name} overlaps"
+                            f" {overlapping_component.name}",
                         )
 
                     cells[x][y] = (x_base, y_base)
-                        
 
     def draw(self) -> Image.Image:
+        """
+        Render the window.
+
+        Validate and render all components.
+
+        :returns: A renders PIL Image object.
+        """
         self.validate_components()
         image = Image.new("RGB", (self.width, self.height), (255, 255, 255))
         x_offset = (self.width % self.cell_width) // 2
