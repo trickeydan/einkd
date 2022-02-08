@@ -16,6 +16,8 @@ if __name__ == "__main__":
     with TkinterDriver((800, 528)) as epd:
         epd.clear()
 
+        sleep(5)
+
         for img_name in images:
             img = Image.open(img_name)
             epd.show(img)

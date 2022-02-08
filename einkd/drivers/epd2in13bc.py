@@ -1,7 +1,8 @@
 """Driver for Waveshare 2in13bc display."""
 import logging
 import time
-from typing import Optional
+from math import ceil
+from typing import Optional, List
 
 import RPi.GPIO
 import spidev
@@ -16,8 +17,12 @@ CMD_POWER_OFF = 0x02
 CMD_POWER_ON = 0x04
 CMD_BOOSTER_SOFT_START = 0x06
 CMD_DEEP_SLEEP = 0x07
+CMD_DATA_START_TRANSMISSION = 0x10
+CMD_REFRESH = 0x12
+CMD_DATA_START_TRANSMISSION2 = 0x13
 CMD_VCOM_AND_DATA_INTERVAL_SETTING = 0x50
 CMD_RESOLUTION_SETTING = 0x61
+CMD_EXIT_PARTIAL_MODE = 0x92
 
 DATA_BOOSTER_SOFT_START = 0x17  # Always 0x17 from datasheet
 DATA_DEEP_SLEEP_CHECK_CODE = 0xA5  # From datasheet
@@ -92,9 +97,9 @@ class EPD2in13bcDisplay(Display):
         # This command defines alternative display resoltuon and is of higher priority
         # than the resolution selected in CMD_POWER_ON
         self._send_command(CMD_RESOLUTION_SETTING)
-        self._send_data(self.width & 0xff)
-        self._send_data(self.height >> 8)  # 2^3 = 8
         self._send_data(self.height & 0xff)
+        self._send_data(self.width >> 8)  # 2^3 = 8
+        self._send_data(self.width & 0xff)
 
     def _send_command(self, command: int) -> None:
         """
@@ -110,13 +115,14 @@ class EPD2in13bcDisplay(Display):
         self._spi.writebytes([command])  # Send the command.
         RPi.GPIO.output(self._cs_pin, 1)  # De-select the e-ink screen.
 
-    def _send_data(self, data: int) -> None:
+    def _send_data(self, data: int, *, quiet: bool = False) -> None:
         """
         Send SPI data to the display.
 
         :param data: The data to send.
         """
-        LOGGER.debug(f"Sending data {data}")
+        if not quiet:
+            LOGGER.debug(f"Sending data {data}")
         RPi.GPIO.output(self._dc_pin, 1)  # Set to data mode.
         RPi.GPIO.output(self._cs_pin, 0)  # Select the e-ink screen.
         self._spi.writebytes([data])  # Send the data.
@@ -140,7 +146,6 @@ class EPD2in13bcDisplay(Display):
 
         :param amount_ms: Number of milliseconds to delay for.
         """
-        LOGGER.debug(f"Waiting {amount_ms}ms")
         time.sleep(amount_ms / 1000.0)
 
     @property
@@ -150,7 +155,7 @@ class EPD2in13bcDisplay(Display):
 
         :returns: The length of the buffer in bytes.
         """
-        return self.width // 8 * self.height
+        return ceil(self.width * self.height / 8)
 
     def reset(self) -> None:
         """
@@ -188,11 +193,38 @@ class EPD2in13bcDisplay(Display):
         self._send_command(CMD_DEEP_SLEEP)
         self._send_data(DATA_DEEP_SLEEP_CHECK_CODE)
 
+    def _get_buffer(self, image: Image.Image) -> List[int]:
+        """
+        Calculate the bytes to send to a display for a given image.
+
+        :param image: The image to display.
+        :returns: The list of bytes to send.
+        :raises ValueError: The image did not match the display size.
+        """
+        LOGGER.debug("Calculating pixel buffer")
+        # Check that the image sizes match
+        if image.size != self.resolution:
+            raise ValueError(f"Image did not match display size: {image.size}")
+
+        # Fill the buffer with all 1s
+        buffer = [0xff] * self.buffer_length
+        monocolour_image = image.convert("1")
+
+        # Iterate through every pixel in the image.
+        for y in range(self.height):
+            for x in range(self.width):
+                if monocolour_image.getpixel((x, self.height - y - 1)) == 0:
+                    # If the pixel is a 0, flip the bit
+                    byte_pos = (y + x * self.height) // 8
+                    buffer[byte_pos] &= ~(0x80 >> (y % 8))
+
+        return buffer
+
     def show(
         self,
         buffer: Image.Image,
         *,
-        channel: Optional[str] = None,
+        channel: Optional[str] = "black",
     ) -> None:
         """
         Set the image.
@@ -200,7 +232,28 @@ class EPD2in13bcDisplay(Display):
         :param buffer: The image to display on the channel.
         :param channel: The channel to set the data for, default to first.
         """
-        print("buffer")
+        if channel not in self.channels:
+            raise ValueError(
+                "Unknown channel: {channel}, expected one of {self.channels}.",
+            )
+
+        data = self._get_buffer(buffer)
+
+        # Start the transmission
+        if channel == "black":
+            LOGGER.debug("Starting transmission of black channel data")
+            self._send_command(CMD_DATA_START_TRANSMISSION)
+        elif channel == "red":
+            LOGGER.debug("Starting transmission of red channel data")
+            self._send_command(CMD_DATA_START_TRANSMISSION2)
+        else:
+            # This code shouldn't be reachable.
+            raise RuntimeError("Unknown channel: {channel}")
+
+        # Send the pixel data
+        LOGGER.debug("Sending pixel data")
+        for pixel_byte in data:
+            self._send_data(pixel_byte, quiet=True)
 
     def refresh(self) -> None:
         """
@@ -210,7 +263,9 @@ class EPD2in13bcDisplay(Display):
 
         This function is blocking, and will wait until the display has refreshed.
         """
-        print("Refresh")
+        LOGGER.debug("Refreshing display.")
+        self._send_command(CMD_REFRESH)
+        self._wait_busy()
 
 
 class EPD2in13bcDriver(BaseDriver):
