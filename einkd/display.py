@@ -85,7 +85,7 @@ class Display(metaclass=ABCMeta):
         :param refresh: Refresh the display.
         """
         LOGGER.debug("Clearing display")
-        img = Image.new("1", self.resolution)
+        img = Image.new("1", self.resolution, 255)
         for channel in self.channels:
             self.show(img, channel=channel)
 
