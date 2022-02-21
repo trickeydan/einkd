@@ -17,7 +17,7 @@ class TextComponent(Component):
         background_colour: str = "white",
     ) -> None:
         super().__init__(name, cell_x, cell_y)
-        self._text = text
+        self.text = text
         self._background_colour = background_colour
 
     def draw(self, cell_width: int, cell_height: int) -> Image.Image:
@@ -25,7 +25,7 @@ class TextComponent(Component):
         Draw the component.
 
         :param cell_width: Width of the component in cells.
-        :param cell_height: Heigh of the component in cells.
+        :param cell_height: Height of the component in cells.
         :returns: A rendered component as a PIL image.
         """
         image = Image.new(
@@ -34,5 +34,5 @@ class TextComponent(Component):
             self._background_colour,
         )
         d = ImageDraw.Draw(image)
-        d.text((0, 0), self._text, fill="black")
+        d.text((0, 0), self.text, fill="black")
         return image
