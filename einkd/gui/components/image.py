@@ -15,11 +15,11 @@ class ImageComponent(Component):
         cell_x: int = 12,
         cell_y: int = 12,
         *,
-        file_path: Path,
+        image: Image.Image,
         centre: bool = True,
     ) -> None:
         super().__init__(name, cell_x, cell_y)
-        self.file_path = file_path
+        self.image = image
         self._centre = centre
 
     def draw(self, cell_width: int, cell_height: int) -> Image.Image:
@@ -30,7 +30,7 @@ class ImageComponent(Component):
         :param cell_height: Heigh of the component in cells.
         :returns: A rendered component as a PIL image.
         """
-        image = Image.open(self.file_path)
+        image = self.image.convert("RGBA")
         dimensions = (cell_width * self.cell_x, cell_height * self.cell_y)
         canvas = Image.new(
             "RGB",
@@ -48,5 +48,5 @@ class ImageComponent(Component):
         else:
             draw_at = (0, 0)
 
-        canvas.paste(image, draw_at)
+        canvas.paste(image, draw_at, mask=image)
         return canvas
